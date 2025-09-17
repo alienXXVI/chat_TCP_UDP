@@ -3,12 +3,12 @@ import java.net.*;
 import java.util.*;
 
 public class ChatServerTCP {
-    private static final int PORT = 12345;
+    private static final int PORT = 50000;
     private static Map<String, Socket> clients = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
-        System.out.println("Servidor TCP iniciado na porta " + PORT);
+        System.out.println("Servidor TCP escutando na porta " + PORT);
 
         while (true) {
             Socket socket = serverSocket.accept();
@@ -29,7 +29,7 @@ public class ChatServerTCP {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-                out.println("Digite seu nome:");
+                out.println("Digite seu nome de usuario: ");
                 username = in.readLine();
                 synchronized (clients) {
                     clients.put(username, socket);
@@ -39,14 +39,20 @@ public class ChatServerTCP {
 
                 String message;
                 while ((message = in.readLine()) != null) {
-                    if (message.startsWith("@")) {
+                    if (message.equalsIgnoreCase("!list")) {
+                        sendUserList(out);
+                    }
+                    else if (message.equalsIgnoreCase("!exit")) {
+                        break;
+                    }
+                    else if (message.startsWith("@")) {
                         String[] parts = message.split(" ", 2);
                         String targetUser = parts[0].substring(1);
                         String privateMsg = parts[1];
 
                         sendToUser(targetUser, "[Privado] " + username + ": " + privateMsg);
                     } else {
-                        broadcast(username + ": " + message);
+                        broadcast("[Todos] " + username + ": " + message);
                     }
                 }
 
@@ -67,6 +73,7 @@ public class ChatServerTCP {
                     new PrintWriter(s.getOutputStream(), true).println(message);
                 }
             }
+            System.out.println(message);
         }
 
         private void sendToUser(String user, String message) throws IOException {
@@ -75,6 +82,17 @@ public class ChatServerTCP {
                 if (s != null) {
                     new PrintWriter(s.getOutputStream(), true).println(message);
                 }
+            }
+            System.out.println(message);
+        }
+
+        private void sendUserList(PrintWriter out) {
+            synchronized (clients) {
+                StringBuilder userList = new StringBuilder("Usuários conectados:\n");
+                for (String user : clients.keySet()) {
+                    userList.append("- ").append(user).append("\n");
+                }
+                out.println(userList.toString());
             }
         }
     }

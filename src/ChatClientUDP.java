@@ -2,7 +2,7 @@ import java.net.*;
 import java.util.Scanner;
 
 public class ChatClientUDP {
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PORT = 50001;
     private static final String SERVER_IP = "localhost";
     private static final int BUFFER_SIZE = 1024;
 
@@ -20,12 +20,16 @@ public class ChatClientUDP {
         // Thread para receber mensagens
         new Thread(() -> {
             byte[] buffer = new byte[BUFFER_SIZE];
-            while (true) {
+            while (!socket.isClosed()) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 try {
                     socket.receive(packet);
                     String msg = new String(packet.getData(), 0, packet.getLength());
                     System.out.println(msg);
+                } catch (SocketException e) {
+                    // Ignora a exceção de "Socket closed" que acontece
+                    // quando o socket é fechado pela thread principal.
+                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -35,7 +39,16 @@ public class ChatClientUDP {
         // Loop de envio de mensagens
         while (true) {
             String input = scanner.nextLine();
-            if (input.startsWith("@")) {
+            if (input.equalsIgnoreCase("!list")) {
+                sendMessage(socket, "LISTAR_USUARIOS:");
+            }
+            else if (input.equalsIgnoreCase("!exit")) {
+                sendMessage(socket, "SAIR:" + username);
+                Thread.sleep(200);
+                socket.close();
+                break;
+            }
+            else if (input.startsWith("@")) {
                 // Mensagem privada
                 int space = input.indexOf(" ");
                 if (space == -1) {

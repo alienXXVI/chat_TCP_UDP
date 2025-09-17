@@ -3,7 +3,7 @@ import java.net.*;
 
 public class ChatClientTCP {
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 12345);
+        Socket socket = new Socket("localhost", 50000);
 
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
@@ -24,7 +24,16 @@ public class ChatClientTCP {
         // Loop para enviar mensagens
         String userInput;
         while ((userInput = keyboard.readLine()) != null) {
-            out.println(userInput);
+            if (userInput.equalsIgnoreCase("!list")) {
+                out.println("!list");
+            }
+            else if (userInput.equalsIgnoreCase("!exit")) {
+                out.println("!exit");
+                break;
+            }
+            else {
+                out.println(userInput);
+            }
         }
 
         socket.close();
