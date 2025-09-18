@@ -1,1 +1,7 @@
-.class
+*.class
+*.exe
+*.o
+*.obj
+*.log
+*.vs/
+.vscode/
